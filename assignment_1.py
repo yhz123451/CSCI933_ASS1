@@ -186,12 +186,70 @@ results = pd.DataFrame({
 print("\nDeep Learning vs. Statistical Approaches:")
 print(results.sort_values('RMSE'))
 
-# Visualisation
-plt.figure(figsize=(10, 6))
-plt.barh(results['Method'], results['RMSE'], color='skyblue')
-plt.xlabel('RMSE')
-plt.title('Model Performance Comparison')
-plt.tight_layout()
-plt.savefig('model_comparison.png')
+
+import matplotlib.pyplot as plt
+
+def plot_predictions(models, model_names, X_test_scaled, y_test):
+    plt.figure(figsize=(10, 6))
+    for model, name in zip(models, model_names):
+        y_pred = model.predict(X_test_scaled)
+        plt.scatter(y_test, y_pred, label=name, alpha=0.6)
+    plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'k--', lw=2)
+    plt.xlabel('Actual')
+    plt.ylabel('Predicted')
+    plt.title('Actual vs. Predicted Values (Statistical Models)')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('actual_vs_predicted.png')
+    plt.show()
+
+
+def plot_residuals(model, X_test_scaled, y_test, model_name):
+    y_pred = model.predict(X_test_scaled)
+    residuals = y_test - y_pred
+    plt.figure(figsize=(8, 5))
+    plt.scatter(y_pred, residuals, alpha=0.6)
+    plt.axhline(0, color='red', linestyle='--')
+    plt.xlabel("Predicted")
+    plt.ylabel("Residuals")
+    plt.title(f"Residual Plot - {model_name}")
+    plt.tight_layout()
+    plt.savefig(f'residuals_{model_name.lower()}.png')
+    plt.show()
+
+
+def plot_training_curve(train_losses, title="NN Training Loss Curve"):
+    plt.figure(figsize=(8, 5))
+    plt.plot(train_losses)
+    plt.xlabel('Epoch')
+    plt.ylabel('MSE Loss')
+    plt.title(title)
+    plt.tight_layout()
+    plt.savefig(f"{title.lower().replace(' ', '_')}.png")
+    plt.show()
+
+
+def plot_rmse_bar(results_df):
+    plt.figure(figsize=(10, 6))
+    plt.barh(results_df['Method'], results_df['RMSE'], color='skyblue')
+    plt.xlabel('RMSE')
+    plt.title('Model RMSE Comparison')
+    plt.tight_layout()
+    plt.savefig('model_comparison.png')
+    plt.show()
+
+plot_predictions(
+    [lin_reg, ridge, lasso, enet],
+    ["OLS", "Ridge", "Lasso", "ElasticNet"],
+    X_test_scaled, y_test
+)
+
+for m, name in zip([lin_reg, ridge, lasso, enet], ["OLS", "Ridge", "Lasso", "ElasticNet"]):
+    plot_residuals(m, X_test_scaled, y_test, name)
+
+_, _, losses_baseline = train_model(X_train_tensor, y_train_tensor, X_test_tensor, y_test_tensor)
+plot_training_curve(losses_baseline, "NN Baseline Training Loss")
+
+plot_rmse_bar(results)
 
 
